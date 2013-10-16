@@ -54,7 +54,7 @@ public class RangeBar extends View {
     private static final int DEFAULT_CONNECTING_LINE_COLOR = 0xff33b5e5;
 
     // Indicator value tells Thumb.java whether it should draw the circle or not
-    private static final float DEFAULT_THUMB_RADIUS_DP = -1;
+    private static final float DEFAULT_THUMB_RADIUS_PX = -1;
     private static final int DEFAULT_THUMB_COLOR_NORMAL = -1;
     private static final int DEFAULT_THUMB_COLOR_PRESSED = -1;
 
@@ -68,16 +68,13 @@ public class RangeBar extends View {
     private int mThumbImageNormal = DEFAULT_THUMB_IMAGE_NORMAL;
     private int mThumbImagePressed = DEFAULT_THUMB_IMAGE_PRESSED;
 
-    private float mThumbRadiusDP = DEFAULT_THUMB_RADIUS_DP;
+    private float mThumbRadiusPX = DEFAULT_THUMB_RADIUS_PX;
     private int mThumbColorNormal = DEFAULT_THUMB_COLOR_NORMAL;
     private int mThumbColorPressed = DEFAULT_THUMB_COLOR_PRESSED;
 
     // setTickCount only resets indices before a thumb has been pressed or a
     // setThumbIndices() is called, to correspond with intended usage
     private boolean mFirstSetTickCount = true;
-
-    private int mDefaultWidth = 500;
-    private int mDefaultHeight = 100;
 
     private Thumb mLeftThumb;
     private Thumb mRightThumb;
@@ -123,7 +120,7 @@ public class RangeBar extends View {
         bundle.putInt("THUMB_IMAGE_NORMAL", mThumbImageNormal);
         bundle.putInt("THUMB_IMAGE_PRESSED", mThumbImagePressed);
 
-        bundle.putFloat("THUMB_RADIUS_DP", mThumbRadiusDP);
+        bundle.putFloat("THUMB_RADIUS_PX", mThumbRadiusPX);
         bundle.putInt("THUMB_COLOR_NORMAL", mThumbColorNormal);
         bundle.putInt("THUMB_COLOR_PRESSED", mThumbColorPressed);
 
@@ -152,7 +149,7 @@ public class RangeBar extends View {
             mThumbImageNormal = bundle.getInt("THUMB_IMAGE_NORMAL");
             mThumbImagePressed = bundle.getInt("THUMB_IMAGE_PRESSED");
 
-            mThumbRadiusDP = bundle.getFloat("THUMB_RADIUS_DP");
+            mThumbRadiusPX = bundle.getFloat("THUMB_RADIUS_PX");
             mThumbColorNormal = bundle.getInt("THUMB_COLOR_NORMAL");
             mThumbColorPressed = bundle.getInt("THUMB_COLOR_PRESSED");
 
@@ -183,25 +180,36 @@ public class RangeBar extends View {
         final int measureHeight = MeasureSpec.getSize(heightMeasureSpec);
 
         // The RangeBar width should be as large as possible.
-        if (measureWidthMode == MeasureSpec.AT_MOST) {
-            width = measureWidth;
-        } else if (measureWidthMode == MeasureSpec.EXACTLY) {
+        if (measureWidthMode == MeasureSpec.EXACTLY) {
             width = measureWidth;
         } else {
-            width = mDefaultWidth;
+            createLeftThumbIfUninitialized(measureHeight);
+            width = (int) (mLeftThumb.getWidth() * 2);
         }
 
         // The RangeBar height should be as small as possible.
-        if (measureHeightMode == MeasureSpec.AT_MOST) {
-            height = Math.min(mDefaultHeight, measureHeight);
-        } else if (measureHeightMode == MeasureSpec.EXACTLY) {
+        if (measureHeightMode == MeasureSpec.EXACTLY) {
             height = measureHeight;
         } else {
-            height = mDefaultHeight;
+            createLeftThumbIfUninitialized(measureHeight);
+            height = (int) Math.max(Math.max(mLeftThumb.getHeight(), mConnectingLineWeight), mBarWeight);
         }
 
         setMeasuredDimension(width, height);
     }
+
+    private void createLeftThumbIfUninitialized(float yPos) {
+        if (mLeftThumb == null) {
+            mLeftThumb = new Thumb(getContext(),
+                    yPos,
+                    mThumbColorNormal,
+                    mThumbColorPressed,
+                    mThumbRadiusPX,
+                    mThumbImageNormal,
+                    mThumbImagePressed);
+        }
+    }
+
 
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
@@ -218,14 +226,14 @@ public class RangeBar extends View {
                                yPos,
                                mThumbColorNormal,
                                mThumbColorPressed,
-                               mThumbRadiusDP,
+                               mThumbRadiusPX,
                                mThumbImageNormal,
                                mThumbImagePressed);
         mRightThumb = new Thumb(ctx,
                                 yPos,
                                 mThumbColorNormal,
                                 mThumbColorPressed,
-                                mThumbRadiusDP,
+                                mThumbRadiusPX,
                                 mThumbImageNormal,
                                 mThumbImagePressed);
 
@@ -414,11 +422,11 @@ public class RangeBar extends View {
      * If this is set, the thumb images will be replaced with a circle of the
      * specified radius. Default width = 20dp.
      *
-     * @param thumbRadius Float specifying the radius of the thumbs to be drawn.
+     * @param thumbRadiusPx Float specifying the radius of the thumbs to be drawn.
      */
-    public void setThumbRadius(float thumbRadius) {
+    public void setThumbRadius(float thumbRadiusPx) {
 
-        mThumbRadiusDP = thumbRadius;
+        mThumbRadiusPX = thumbRadiusPx;
         createThumbs();
     }
 
@@ -566,7 +574,7 @@ public class RangeBar extends View {
                                                     DEFAULT_CONNECTING_LINE_WEIGHT_PX);
             mConnectingLineColor = ta.getColor(R.styleable.RangeBar_connectingLineColor,
                                                DEFAULT_CONNECTING_LINE_COLOR);
-            mThumbRadiusDP = ta.getDimension(R.styleable.RangeBar_thumbRadius, DEFAULT_THUMB_RADIUS_DP);
+            mThumbRadiusPX = ta.getDimension(R.styleable.RangeBar_thumbRadius, DEFAULT_THUMB_RADIUS_PX);
             mThumbImageNormal = ta.getResourceId(R.styleable.RangeBar_thumbImageNormal,
                                                  DEFAULT_THUMB_IMAGE_NORMAL);
             mThumbImagePressed = ta.getResourceId(R.styleable.RangeBar_thumbImagePressed,
@@ -627,14 +635,14 @@ public class RangeBar extends View {
                                yPos,
                                mThumbColorNormal,
                                mThumbColorPressed,
-                               mThumbRadiusDP,
+                               mThumbRadiusPX,
                                mThumbImageNormal,
                                mThumbImagePressed);
         mRightThumb = new Thumb(ctx,
                                 yPos,
                                 mThumbColorNormal,
                                 mThumbColorPressed,
-                                mThumbRadiusDP,
+                                mThumbRadiusPX,
                                 mThumbImageNormal,
                                 mThumbImagePressed);
 
