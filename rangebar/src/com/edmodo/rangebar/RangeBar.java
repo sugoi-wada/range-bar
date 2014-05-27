@@ -85,6 +85,9 @@ public class RangeBar extends View {
     private int mLeftIndex = 0;
     private int mRightIndex = mTickCount - 1;
 
+    private boolean mIsTouchedBetweenThumbs;
+    private float mTouchedBetweenX;
+
     // Constructors ////////////////////////////////////////////////////////////
 
     public RangeBar(Context context) {
@@ -728,7 +731,8 @@ public class RangeBar extends View {
 
         } else if (isTouchBetweenThumbs(x)) {
 
-            // Log.d("", "touch");
+            mIsTouchedBetweenThumbs = true;
+            mTouchedBetweenX = x;
 
         }
     }
@@ -746,6 +750,12 @@ public class RangeBar extends View {
         } else if (mRightThumb.isPressed()) {
 
             releaseThumb(mRightThumb);
+
+        } else if (mIsTouchedBetweenThumbs) {
+
+            releaseThumb(mLeftThumb);
+            releaseThumb(mRightThumb);
+
         }
     }
 
@@ -761,6 +771,11 @@ public class RangeBar extends View {
             moveThumb(mLeftThumb, x);
         } else if (mRightThumb.isPressed()) {
             moveThumb(mRightThumb, x);
+        } else if (mIsTouchedBetweenThumbs) {
+            float dx = x - mTouchedBetweenX;
+            moveThumb(mLeftThumb, dx + mLeftThumb.getX());
+            moveThumb(mRightThumb, mRightThumb.getX() + dx);
+            mTouchedBetweenX = x;
         }
 
         // If the thumbs have switched order, fix the references.
