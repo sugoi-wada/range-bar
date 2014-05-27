@@ -725,6 +725,11 @@ public class RangeBar extends View {
         } else if (!mLeftThumb.isPressed() && mRightThumb.isInTargetZone(x, y)) {
 
             pressThumb(mRightThumb);
+
+        } else if (isTouchBetweenThumbs(x)) {
+
+            // Log.d("", "touch");
+
         }
     }
 
@@ -825,6 +830,20 @@ public class RangeBar extends View {
             thumb.setX(x);
             invalidate();
         }
+    }
+
+    /**
+     * Determines if input coordinate is between both thumbs
+     *
+     * @param x the x-coordinate of the user touch
+     * @return true if the coordinate is between both thumbs
+     */
+    private boolean isTouchBetweenThumbs(float x) {
+
+        if (mLeftThumb.getX() > x) return false;
+        if (mRightThumb.getX() < x) return false;
+
+        return true;
     }
 
     // Inner Classes ///////////////////////////////////////////////////////////
