@@ -773,8 +773,12 @@ public class RangeBar extends View {
             moveThumb(mRightThumb, x);
         } else if (mIsTouchedBetweenThumbs) {
             float dx = x - mTouchedBetweenX;
-            moveThumb(mLeftThumb, dx + mLeftThumb.getX());
-            moveThumb(mRightThumb, mRightThumb.getX() + dx);
+            float leftX = dx + mLeftThumb.getX();
+            float rightX = mRightThumb.getX() + dx;
+            if (leftX >= mBar.getLeftX() && rightX <= mBar.getRightX()) {
+                moveThumb(mLeftThumb, leftX);
+                moveThumb(mRightThumb, rightX);
+            }
             mTouchedBetweenX = x;
         }
 
