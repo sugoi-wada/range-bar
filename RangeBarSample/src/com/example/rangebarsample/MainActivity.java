@@ -17,6 +17,7 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 
 import com.edmodo.rangebar.RangeBar;
+import com.edmodo.rangebar.ThumbSide;
 
 public class MainActivity extends Activity implements ColorPickerDialog.OnColorChangedListener {
 
@@ -128,8 +129,7 @@ public class MainActivity extends Activity implements ColorPickerDialog.OnColorC
         // Sets the display values of the indices
         rangebar.setOnRangeBarChangeListener(new RangeBar.OnRangeBarChangeListener() {
             @Override
-            public void onIndexChangeListener(RangeBar rangeBar, int leftThumbIndex, int rightThumbIndex) {
-
+            public void onIndexChangeListener(RangeBar rangeBar, int leftThumbIndex, int rightThumbIndex, ThumbSide thumbSide) {
                 leftIndexValue.setText("" + leftThumbIndex);
                 rightIndexValue.setText("" + rightThumbIndex);
             }
