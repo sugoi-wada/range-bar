@@ -85,6 +85,9 @@ public class RangeBar extends View {
     private int mLeftIndex = 0;
     private int mRightIndex = mTickCount - 1;
 
+    private boolean mIsTouchedBetweenThumbs;
+    private float mTouchedBetweenX;
+
     // Constructors ////////////////////////////////////////////////////////////
 
     public RangeBar(Context context) {
@@ -725,6 +728,12 @@ public class RangeBar extends View {
         } else if (!mLeftThumb.isPressed() && mRightThumb.isInTargetZone(x, y)) {
 
             pressThumb(mRightThumb);
+
+        } else if (isTouchBetweenThumbs(x)) {
+
+            mIsTouchedBetweenThumbs = true;
+            mTouchedBetweenX = x;
+
         }
     }
 
@@ -741,6 +750,12 @@ public class RangeBar extends View {
         } else if (mRightThumb.isPressed()) {
 
             releaseThumb(mRightThumb);
+
+        } else if (mIsTouchedBetweenThumbs) {
+
+            releaseThumb(mLeftThumb);
+            releaseThumb(mRightThumb);
+
         }
     }
 
@@ -756,6 +771,11 @@ public class RangeBar extends View {
             moveThumb(mLeftThumb, x);
         } else if (mRightThumb.isPressed()) {
             moveThumb(mRightThumb, x);
+        } else if (mIsTouchedBetweenThumbs) {
+            float dx = x - mTouchedBetweenX;
+            moveThumb(mLeftThumb, dx + mLeftThumb.getX());
+            moveThumb(mRightThumb, mRightThumb.getX() + dx);
+            mTouchedBetweenX = x;
         }
 
         // If the thumbs have switched order, fix the references.
@@ -825,6 +845,20 @@ public class RangeBar extends View {
             thumb.setX(x);
             invalidate();
         }
+    }
+
+    /**
+     * Determines if input coordinate is between both thumbs
+     *
+     * @param x the x-coordinate of the user touch
+     * @return true if the coordinate is between both thumbs
+     */
+    private boolean isTouchBetweenThumbs(float x) {
+
+        if (mLeftThumb.getX() > x) return false;
+        if (mRightThumb.getX() < x) return false;
+
+        return true;
     }
 
     // Inner Classes ///////////////////////////////////////////////////////////
