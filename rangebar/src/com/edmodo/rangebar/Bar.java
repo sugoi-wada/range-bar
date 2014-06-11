@@ -81,7 +81,7 @@ class Bar {
 
         canvas.drawLine(mLeftX, mY, mRightX, mY, mPaint);
 
-        drawTicks(canvas);
+        // drawTicks(canvas);
     }
 
     /**
