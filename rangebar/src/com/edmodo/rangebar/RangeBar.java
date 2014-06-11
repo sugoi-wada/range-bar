@@ -729,7 +729,7 @@ public class RangeBar extends View {
 
             pressThumb(mRightThumb);
 
-        } else if (isTouchBetweenThumbs(x)) {
+        } else if (!mLeftThumb.isPressed() && !mRightThumb.isPressed() && isTouchBetweenThumbs(x)) {
 
             mIsTouchedBetweenThumbs = true;
             mTouchedBetweenX = x;
@@ -755,6 +755,7 @@ public class RangeBar extends View {
 
             releaseThumb(mLeftThumb);
             releaseThumb(mRightThumb);
+            mIsTouchedBetweenThumbs = false;
 
         }
     }
