@@ -501,6 +501,7 @@ public class RangeBar extends View {
     public void setMaxRange(int maxRange) {
         if (isValidMaxRange(maxRange)) {
             mMaxRange = maxRange;
+            setThumbIndices(mLeftIndex, indexOutOfRange(mLeftIndex, mLeftIndex + mMaxRange) ? mTickCount - 1 : mLeftIndex + mMaxRange);
         } else {
             Log.e(TAG, " maxRange less than 2 or more than tickCount; invalid tickCount. XML input ignored.");
         }
@@ -514,6 +515,8 @@ public class RangeBar extends View {
     public void setMinRange(int minRange) {
         if (isValidMinRange(minRange)) {
             mMinRange = minRange;
+            if(mRightIndex - mLeftIndex < mMinRange)
+                setThumbIndices(0, mMinRange);
         } else {
             Log.e(TAG,
                     "minRange less than 2 or more than tickCount or more than maxRange; invalid tickCount. XML input ignored.");
