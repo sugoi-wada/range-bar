@@ -57,6 +57,8 @@ public class RangeBar extends View {
     private static final float DEFAULT_THUMB_RADIUS_PX = -1;
     private static final int DEFAULT_THUMB_COLOR_NORMAL = -1;
     private static final int DEFAULT_THUMB_COLOR_PRESSED = -1;
+    private static final int DEFAULT_MAX_SPAN = 2;
+    private static final int DEFAULT_MIN_SPAN = 0;
 
     // Instance variables for all of the customizable attributes
     private int mTickCount = DEFAULT_TICK_COUNT;
@@ -72,19 +74,21 @@ public class RangeBar extends View {
     private int mThumbColorNormal = DEFAULT_THUMB_COLOR_NORMAL;
     private int mThumbColorPressed = DEFAULT_THUMB_COLOR_PRESSED;
 
+    private int mMaxRange = DEFAULT_MAX_SPAN;
+    private int mMinRange = DEFAULT_MIN_SPAN;
+
     // setTickCount only resets indices before a thumb has been pressed or a
     // setThumbIndices() is called, to correspond with intended usage
     private boolean mFirstSetTickCount = true;
-
     private Thumb mLeftThumb;
     private Thumb mRightThumb;
     private Bar mBar;
-    private ConnectingLine mConnectingLine;
 
+    private ConnectingLine mConnectingLine;
     private RangeBar.OnRangeBarChangeListener mListener;
     private int mLeftIndex = 0;
-    private int mRightIndex = mTickCount - 1;
 
+    private int mRightIndex = mTickCount - 1;
     private boolean mIsTouchedBetweenThumbs;
     private float mTouchedBetweenX;
 
@@ -132,6 +136,9 @@ public class RangeBar extends View {
 
         bundle.putBoolean("FIRST_SET_TICK_COUNT", mFirstSetTickCount);
 
+        bundle.putInt("MAX_SPAN", mMaxRange);
+        bundle.putInt("MIN_SPAN", mMinRange);
+
         return bundle;
     }
 
@@ -159,6 +166,9 @@ public class RangeBar extends View {
             mLeftIndex = bundle.getInt("LEFT_INDEX");
             mRightIndex = bundle.getInt("RIGHT_INDEX");
             mFirstSetTickCount = bundle.getBoolean("FIRST_SET_TICK_COUNT");
+
+            mMaxRange = bundle.getInt("MAX_SPAN");
+            mMinRange = bundle.getInt("MIN_SPAN");
 
             setThumbIndices(mLeftIndex, mRightIndex);
 
@@ -333,12 +343,13 @@ public class RangeBar extends View {
 
         if (isValidTickCount(tickCount)) {
             mTickCount = tickCount;
+            mMaxRange = tickCount - 1;
 
             // Prevents resetting the indices when creating new activity, but
             // allows it on the first setting.
             if (mFirstSetTickCount) {
                 mLeftIndex = 0;
-                mRightIndex = mTickCount - 1;
+                mRightIndex = mMaxRange;
 
                 if (mListener != null) {
                     mListener.onIndexChangeListener(this, mLeftIndex, mRightIndex, ThumbSide.NONE);
@@ -347,7 +358,7 @@ public class RangeBar extends View {
             if (indexOutOfRange(mLeftIndex, mRightIndex))
             {
                 mLeftIndex = 0;
-                mRightIndex = mTickCount - 1;
+                mRightIndex = mMaxRange;
 
                 if (mListener != null)
                     mListener.onIndexChangeListener(this, mLeftIndex, mRightIndex, ThumbSide.NONE);
@@ -483,6 +494,33 @@ public class RangeBar extends View {
     }
 
     /**
+     * Sets the max range
+     * 
+     * @param maxRange
+     */
+    public void setMaxRange(int maxRange) {
+        if (isValidMaxRange(maxRange)) {
+            mMaxRange = maxRange;
+        } else {
+            Log.e(TAG, " maxRange less than 2 or more than tickCount; invalid tickCount. XML input ignored.");
+        }
+    }
+
+    /**
+     * Sets the min range
+     * 
+     * @param minRange
+     */
+    public void setMinRange(int minRange) {
+        if (isValidMinRange(minRange)) {
+            mMinRange = minRange;
+        } else {
+            Log.e(TAG,
+                    "minRange less than 2 or more than tickCount or more than maxRange; invalid tickCount. XML input ignored.");
+        }
+    }
+
+    /**
      * Sets the location of each thumb according to the developer's choice.
      * Numbered from 0 to mTickCount - 1 from the left.
      * 
@@ -567,8 +605,25 @@ public class RangeBar extends View {
                 }
 
             } else {
-
                 Log.e(TAG, "tickCount less than 2; invalid tickCount. XML input ignored.");
+            }
+
+            final Integer maxRange = ta.getInteger(R.styleable.RangeBar_maxRange, DEFAULT_MAX_SPAN);
+
+            if (isValidMaxRange(maxRange)) {
+                mMaxRange = maxRange;
+            } else {
+                mMaxRange = mTickCount - 1;
+                Log.e(TAG, "maxRange less than 2 or more than tickCount; invalid tickCount. XML input ignored.");
+            }
+
+            final Integer minRange = ta.getInteger(R.styleable.RangeBar_minRange, DEFAULT_MIN_SPAN);
+
+            if (isValidMinRange(minRange)) {
+                mMinRange = minRange;
+            } else {
+                Log.e(TAG,
+                        "minRange less than 2 or more than tickCount or more than maxRange; invalid tickCount. XML input ignored.");
             }
 
             mTickHeightDP = ta.getDimension(R.styleable.RangeBar_tickHeight, DEFAULT_TICK_HEIGHT_DP);
@@ -698,9 +753,9 @@ public class RangeBar extends View {
      * @return boolean If the index is out of range.
      */
     private boolean indexOutOfRange(int leftThumbIndex, int rightThumbIndex) {
-        return (leftThumbIndex < 0 || leftThumbIndex >= mTickCount
-                || rightThumbIndex < 0
-                || rightThumbIndex >= mTickCount);
+        final int range = rightThumbIndex - leftThumbIndex;
+        return (leftThumbIndex < 0 || leftThumbIndex >= mTickCount || rightThumbIndex < 0
+                || rightThumbIndex >= mTickCount || range > mMaxRange || range < mMinRange);
     }
 
     /**
@@ -711,6 +766,28 @@ public class RangeBar extends View {
      */
     private boolean isValidTickCount(int tickCount) {
         return (tickCount > 1);
+    }
+
+    /**
+     * If is invalid maxRange, rejects. MaxRange must be greater than 0 and
+     * minuter than mTickCount
+     * 
+     * @param maxRange
+     * @return
+     */
+    private boolean isValidMaxRange(int maxRange) {
+        return maxRange >= 1 && maxRange < mTickCount;
+    }
+
+    /**
+     * If is invalid minRange, rejects. MinRange must be greater than 0 and
+     * minuter than mTickCount and mMaxRange
+     * 
+     * @param minRange
+     * @return
+     */
+    private boolean isValidMinRange(int minRange) {
+        return minRange >= 0 && minRange < mTickCount && minRange < mMaxRange;
     }
 
     /**
@@ -769,16 +846,16 @@ public class RangeBar extends View {
 
         // Move the pressed thumb to the new x-position.
         if (mLeftThumb.isPressed()) {
-            moveThumb(mLeftThumb, x);
+            moveThumb(mLeftThumb, x, ThumbSide.LEFT);
         } else if (mRightThumb.isPressed()) {
-            moveThumb(mRightThumb, x);
+            moveThumb(mRightThumb, x, ThumbSide.RIGHT);
         } else if (mIsTouchedBetweenThumbs) {
             float dx = x - mTouchedBetweenX;
             float leftX = dx + mLeftThumb.getX();
             float rightX = mRightThumb.getX() + dx;
             if (leftX >= mBar.getLeftX() && rightX <= mBar.getRightX()) {
-                moveThumb(mLeftThumb, leftX);
-                moveThumb(mRightThumb, rightX);
+                moveThumb(mLeftThumb, leftX, ThumbSide.BOTH);
+                moveThumb(mRightThumb, rightX, ThumbSide.BOTH);
             }
             mTouchedBetweenX = x;
         }
@@ -839,22 +916,49 @@ public class RangeBar extends View {
      * 
      * @param thumb the thumb to move
      * @param x the x-coordinate to move the thumb to
+     * @param thumbSide the moving thumb side.
      */
-    private void moveThumb(Thumb thumb, float x) {
+    private void moveThumb(Thumb thumb, float x, ThumbSide thumbSide) {
+
+        final int movingTickIndex = mBar.getNearestTickIndex(x);
+
+        switch (thumbSide) {
+            case RIGHT:
+                final int leftIndex = mBar.getNearestTickIndex(mLeftThumb);
+                int range = movingTickIndex - leftIndex;
+                if (mRightThumb.getX() > x && mMinRange >= range)
+                    x = mBar.getNearestTickCoordinate(mLeftIndex + mMinRange);
+                if (mRightThumb.getX() < x && mMaxRange <= range)
+                    x = mBar.getNearestTickCoordinate(mLeftIndex + mMaxRange);
+                break;
+            case LEFT:
+                final int rightIndex = mBar.getNearestTickIndex(mRightThumb);
+                range = rightIndex - movingTickIndex;
+                if (mLeftThumb.getX() < x && mMinRange >= range)
+                    x = mBar.getNearestTickCoordinate(mRightIndex - mMinRange);
+                if (mLeftThumb.getX() > x && mMaxRange <= range)
+                    x = mBar.getNearestTickCoordinate(mRightIndex - mMaxRange);
+                break;
+            case BOTH:
+            case NONE:
+                // Do nothing.
+                break;
+        }
 
         // If the user has moved their finger outside the range of the bar,
         // do not move the thumbs past the edge.
         if (x < mBar.getLeftX() || x > mBar.getRightX()) {
             // Do nothing.
-        } else {
-            thumb.setX(x);
-            invalidate();
+            return;
         }
+
+        thumb.setX(x);
+        invalidate();
     }
 
     /**
      * Determines if input coordinate is between both thumbs
-     *
+     * 
      * @param x the x-coordinate of the user touch
      * @return true if the coordinate is between both thumbs
      */
