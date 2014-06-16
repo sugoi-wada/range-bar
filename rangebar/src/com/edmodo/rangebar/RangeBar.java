@@ -165,12 +165,12 @@ public class RangeBar extends View {
 
             mLeftIndex = bundle.getInt("LEFT_INDEX");
             mRightIndex = bundle.getInt("RIGHT_INDEX");
-            mFirstSetTickCount = bundle.getBoolean("FIRST_SET_TICK_COUNT");
 
             mMaxRange = bundle.getInt("MAX_SPAN");
             mMinRange = bundle.getInt("MIN_SPAN");
 
             setThumbIndices(mLeftIndex, mRightIndex);
+            mFirstSetTickCount = bundle.getBoolean("FIRST_SET_TICK_COUNT");
 
             super.onRestoreInstanceState(bundle.getParcelable("instanceState"));
 
